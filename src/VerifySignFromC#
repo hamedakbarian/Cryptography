@@ -13,7 +13,7 @@ import java.security.spec.*;
 /**
  * Created by h.akbarian on 10/5/2016.
  */
-public class VerifySign {
+public class VerifySignFromC# {
     public static void main(String[] args) throws Exception {
         Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
 
