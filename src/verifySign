@@ -1,0 +1,168 @@
+package ir.dotin.security;
+
+import org.olap4j.impl.Base64;
+
+import javax.crypto.Cipher;
+import java.math.BigInteger;
+import java.security.*;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.io.*;
+import java.security.spec.*;
+
+/**
+ * Created by h.akbarian on 10/5/2016.
+ */
+public class VerifySign {
+    public static void main(String[] args) throws Exception {
+        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+
+        //KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA", "BC");
+
+        //keyGen.initialize(2048, new SecureRandom());
+
+
+        byte[] modulusBytes = Base64.decode("m9KhIkTyd18YmFTMWb8hVpFqHrmclmyKf3Pxv8epXvTqS/+E1Ip+kBFHnBh4kdvP3bn/UU67pu5EH9reopFDNN72a/v1TmJgRsHm1mQ+JBgNiHOA6rO9lQ/L2WSK34I1fCLU74MEnabPyePkbAqAjmHrMPHaAahtN/0Kh4wEzqZ6LWvXZOJ7WoWbtGRrVENB7eoq2HjHhn0Zh6GgR3h9pRy/5w8uCJyeFWZPd+/O4dCEcGpGuARSf+VyMbpVgVwwWLNUGfBdKnr4+LPO4lcCF6AwrBIuqksVhfeK0lprtKOjwJnWuxv4Rwdl4t/US2CDhaacYntxQpz3mTbGgr4QRQ==");
+        byte[] exponentBytes = Base64.decode("AQAB");
+
+        BigInteger modulus = new BigInteger(1, modulusBytes );
+        BigInteger exponent = new BigInteger(1, exponentBytes);
+
+        RSAPublicKeySpec rsaPubKey = new RSAPublicKeySpec(modulus, exponent);
+
+
+
+
+        KeyFactory fact = KeyFactory.getInstance("RSA");
+
+        PublicKey pubKey = fact.generatePublic(rsaPubKey);
+
+        //Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-1AndMGF1Padding");
+        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding","BC");
+
+
+        cipher.init(Cipher.DECRYPT_MODE, pubKey);
+
+        String signitureRecievedFromDotNet = "ZEabBhJjyg2T2Pudd5iitkfoNBWCko1ya29+vGjIkIWEisfLgRZkBUoni/2gVkjV4PTq71hgTzwMNgUVOKFaUqXyKcXnJtkdXeWe6z20qaEM1F23NoeA4ytjqlZPJuM8qvyJKeBmuruKm+/A2dJ9v89+DaM2QL/No4358RzqMQVBm2xhVQa+Vzjlul7fBqgINkPj9GbQVHw2VWrjBfJhA9FnokPJw44OD5OXno5ylJ/fl/WPVgbCG05dXJUNS7eT6zi4aznnGGMpiAA6jxpPqyhDRJUWBSpD3p+hQDD1qCKeEzfyY3g1Fd8Ug4JdNPW2IMUSvMCxLvxhsT9pdoS3vw==";
+        byte[] sigBytes =  Base64.decode(signitureRecievedFromDotNet);
+        byte[] outt= cipher.doFinal(sigBytes);
+
+        MessageDigest md = null;
+        md = MessageDigest.getInstance("SHA-1");
+        byte[] sha1_data=md.digest("DataToSign".getBytes());
+
+
+        System.out.println( Base64.encodeBytes(outt));
+        System.out.println( Base64.encodeBytes(sha1_data));
+
+
+
+
+
+//        KeyPair keyPair = keyGen.generateKeyPair();
+//        System.out.println(keyPair.getPrivate().toString());
+//        System.out.println(keyPair.getPublic().toString());
+        Signature signature = Signature.getInstance("SHA1withRSA");
+
+//        signature.initSign(keyPair.getPrivate(), new SecureRandom());
+
+//        signature.update(message);
+
+
+//        byte[] sigBytes = "JkkVo91md9hjGcFdb7b6n6ZFfEgkayQy4nQf1roD2E19jGEyhtDezx3JysD16s+N9d+5DQMlNFptZy0v0EkJ4fvsPdx6c7taKb21Jmg2lngo+DcdeI6Ne3hYKH164d1ne/T3iJ4ghRC+P3KBrns7vGrysnVyTcJie0LCqmzdQFmKFKfrUdIQD/i1YpDqmSIQ9pNXGnXYnSHvRd6ZUySheOI2jnQSzkwE5qx8NZGdEEc5g2cZfvmzbrRKZuuZ0oBr5CyHaWXPMDY3egnXNOJGhCqw2/OJzVZ95q2hl3Mn1ZU2IZEHSWlJRu1mMT8e+dM36bJuMBPi7RVoKaWmUgMJNA==";
+
+
+        signature.initVerify(pubKey);
+        signature.update("DataToSign".getBytes("UTF-8"));
+        System.out.println(signature.verify(sigBytes));
+
+//        try {
+//            String path = "D:\\key";
+//
+//            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA/ECB/PKCS1Padding");
+//
+//            keyGen.initialize(1024);
+//            KeyPair generatedKeyPair = keyGen.genKeyPair();
+//
+//            System.out.println("Generated Key Pair");
+//            dumpKeyPair(generatedKeyPair);
+//            SaveKeyPair(path, generatedKeyPair);
+//
+//            KeyPair loadedKeyPair = LoadKeyPair(path, "RSA/ECB/PKCS1Padding");
+//            System.out.println("Loaded Key Pair");
+//            dumpKeyPair(loadedKeyPair);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return;
+//        }
+
+
+
+    }
+
+    private static void dumpKeyPair(KeyPair keyPair) {
+        PublicKey pub = keyPair.getPublic();
+        System.out.println("Public Key: " + getHexString(pub.getEncoded()));
+
+        PrivateKey priv = keyPair.getPrivate();
+        System.out.println("Private Key: " + getHexString(priv.getEncoded()));
+    }
+
+    private static String getHexString(byte[] b) {
+        String result = "";
+        for (int i = 0; i < b.length; i++) {
+            result += Integer.toString((b[i] & 0xff) + 0x100, 16).substring(1);
+        }
+        return result;
+    }
+
+    public static void SaveKeyPair(String path, KeyPair keyPair) throws IOException {
+        PrivateKey privateKey = keyPair.getPrivate();
+        PublicKey publicKey = keyPair.getPublic();
+
+        // Store Public Key.
+        X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(
+                publicKey.getEncoded());
+        FileOutputStream fos = new FileOutputStream(path + "/public.key");
+        fos.write(x509EncodedKeySpec.getEncoded());
+        fos.close();
+
+        // Store Private Key.
+        PKCS8EncodedKeySpec pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(
+                privateKey.getEncoded());
+        fos = new FileOutputStream(path + "/private.key");
+        fos.write(pkcs8EncodedKeySpec.getEncoded());
+        fos.close();
+    }
+
+    public  static KeyPair LoadKeyPair(String path, String algorithm)
+            throws IOException, NoSuchAlgorithmException,
+            InvalidKeySpecException {
+        // Read Public Key.
+        File filePublicKey = new File(path + "/public.key");
+        FileInputStream fis = new FileInputStream(path + "/public.key");
+        byte[] encodedPublicKey = new byte[(int) filePublicKey.length()];
+        fis.read(encodedPublicKey);
+        fis.close();
+
+        // Read Private Key.
+        File filePrivateKey = new File(path + "/private.key");
+        fis = new FileInputStream(path + "/private.key");
+        byte[] encodedPrivateKey = new byte[(int) filePrivateKey.length()];
+        fis.read(encodedPrivateKey);
+        fis.close();
+
+        // Generate KeyPair.
+        KeyFactory keyFactory = KeyFactory.getInstance(algorithm);
+        X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(
+                encodedPublicKey);
+        PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
+
+        PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(
+                encodedPrivateKey);
+        PrivateKey privateKey = keyFactory.generatePrivate(privateKeySpec);
+
+        return new KeyPair(publicKey, privateKey);
+    }
+
+}
